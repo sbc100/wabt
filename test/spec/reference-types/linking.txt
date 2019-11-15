@@ -1,0 +1,63 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/linking.wast
+;;; ARGS*: --enable-reference-types
+(;; STDERR ;;;
+error: type mismatch in imported global, expected nullref but got anyref.
+000001e: error: OnImportGlobal callback failed
+;;; STDERR ;;)
+(;; STDOUT ;;;
+out/test/spec/reference-types/linking.wast:28: assert_unlinkable passed:
+  error: import signature mismatch
+  0000025: error: OnImportFunc callback failed
+out/test/spec/reference-types/linking.wast:32: assert_unlinkable passed:
+  error: import signature mismatch
+  0000026: error: OnImportFunc callback failed
+out/test/spec/reference-types/linking.wast:87: assert_unlinkable passed:
+  error: mutability mismatch in imported global, expected mutable but got immutable.
+  000001a: error: OnImportGlobal callback failed
+out/test/spec/reference-types/linking.wast:91: assert_unlinkable passed:
+  error: mutability mismatch in imported global, expected immutable but got mutable.
+  0000016: error: OnImportGlobal callback failed
+out/test/spec/reference-types/linking.wast:102: error reading module: "out/test/spec/reference-types/linking/linking.10.wasm"
+out/test/spec/reference-types/linking.wast:107: assert_unlinkable passed:
+  error: type mismatch in imported global, expected nullref but got anyref.
+  000001c: error: OnImportGlobal callback failed
+out/test/spec/reference-types/linking.wast:153: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:154: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:156: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:158: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:159: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:161: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:163: assert_trap passed: undefined table index
+out/test/spec/reference-types/linking.wast:164: assert_trap passed: undefined table index
+out/test/spec/reference-types/linking.wast:165: assert_trap passed: undefined table index
+out/test/spec/reference-types/linking.wast:166: assert_trap passed: undefined table index
+out/test/spec/reference-types/linking.wast:169: assert_trap passed: indirect call signature mismatch
+out/test/spec/reference-types/linking.wast:201: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:202: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:204: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:205: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:207: assert_trap passed: undefined table index
+out/test/spec/reference-types/linking.wast:224: assert_unlinkable passed:
+  error: elem segment is out of bounds: [10, 11) >= max value 10
+out/test/spec/reference-types/linking.wast:233: assert_unlinkable passed:
+  error: unknown module field "mem"
+  0000027: error: OnImportMemory callback failed
+out/test/spec/reference-types/linking.wast:242: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:245: assert_unlinkable passed:
+  error: elem segment is out of bounds: [12, 13) >= max value 10
+out/test/spec/reference-types/linking.wast:253: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:256: assert_unlinkable passed:
+  error: data segment is out of bounds: [65536, 65537) >= max value 65536
+out/test/spec/reference-types/linking.wast:265: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/linking.wast:316: assert_unlinkable passed:
+  error: data segment is out of bounds: [65536, 65537) >= max value 65536
+out/test/spec/reference-types/linking.wast:341: assert_unlinkable passed:
+  error: unknown module field "tab"
+  0000037: error: OnImportTable callback failed
+out/test/spec/reference-types/linking.wast:352: assert_unlinkable passed:
+  error: data segment is out of bounds: [327680, 327681) >= max value 327680
+out/test/spec/reference-types/linking.wast:362: assert_unlinkable passed:
+  error: elem segment is out of bounds: [0, 1) >= max value 0
+95/95 tests passed.
+;;; STDOUT ;;)

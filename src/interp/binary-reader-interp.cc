@@ -212,6 +212,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnTableCopyExpr(Index dst_index, Index src_index) override;
   wabt::Result OnTableGetExpr(Index table_index) override;
   wabt::Result OnTableSetExpr(Index table_index) override;
+  wabt::Result OnTableGrowExpr(Index table_index) override;
+  wabt::Result OnTableSizeExpr(Index table_index) override;
   wabt::Result OnElemDropExpr(Index segment_index) override;
   wabt::Result OnTableInitExpr(Index segment_index, Index table_index) override;
   wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
@@ -252,6 +254,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   wabt::Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
   wabt::Result OnInitExprRefNull(Index index) override;
+  wabt::Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:
   Label* GetLabel(Index depth);
@@ -1032,6 +1035,12 @@ wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::OnInitExprRefFunc(Index index, Index func_index) {
+  init_expr_value_.type = Type::Funcref;
+  init_expr_value_.set_ref({RefType::Func, TranslateFuncIndexToEnv(func_index)});
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::OnExport(Index index,
                                           ExternalKind kind,
                                           Index item_index,
@@ -1752,10 +1761,25 @@ wabt::Result BinaryReaderInterp::OnMemorySizeExpr() {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::OnTableGrowExpr(Index table_index) {
+  Table* table = GetTableByModuleIndex(table_index);
+  CHECK_RESULT(typechecker_.OnTableGrow(table->elem_type));
+  CHECK_RESULT(EmitOpcode(Opcode::TableGrow));
+  CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnTableSizeExpr(Index table_index) {
+  CHECK_RESULT(typechecker_.OnTableSize());
+  CHECK_RESULT(EmitOpcode(Opcode::TableSize));
+  CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   CHECK_RESULT(typechecker_.OnRefFuncExpr(func_index));
   CHECK_RESULT(EmitOpcode(Opcode::RefFunc));
-  CHECK_RESULT(EmitI32(func_index));
+  CHECK_RESULT(EmitI32(TranslateFuncIndexToEnv(func_index)));
   return wabt::Result::Ok;
 }
 

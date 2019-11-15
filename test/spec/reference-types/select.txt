@@ -1,0 +1,60 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/select.wast
+;;; ARGS*: --enable-reference-types
+(;; STDOUT ;;;
+out/test/spec/reference-types/select.wast:230: assert_trap passed: unreachable executed
+out/test/spec/reference-types/select.wast:231: assert_trap passed: unreachable executed
+out/test/spec/reference-types/select.wast:232: assert_trap passed: unreachable executed
+out/test/spec/reference-types/select.wast:233: assert_trap passed: unreachable executed
+out/test/spec/reference-types/select.wast:270: assert_trap passed: undefined table index
+out/test/spec/reference-types/select.wast:271: assert_trap passed: undefined table index
+out/test/spec/reference-types/select.wast:312: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got [i32]
+  000001c: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:319: assert_invalid passed:
+  error: type mismatch in select, expected [i64, i64, i32] but got [i32, i64, i32]
+  000001e: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:323: assert_invalid passed:
+  error: type mismatch in select, expected [f32, f32, i32] but got [i32, f32, i32]
+  0000021: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:327: assert_invalid passed:
+  error: type mismatch in select, expected [f64, f64, i32] but got [i32, f64, i32]
+  0000025: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:333: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got []
+  0000018: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:341: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got [i32]
+  000001a: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:349: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  000001c: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:357: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got []
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:366: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got [i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:375: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:384: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got []
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:393: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got [i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:402: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:411: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got []
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:420: assert_invalid passed:
+  error: type mismatch in select, expected [any, any, i32] but got [i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/reference-types/select.wast:429: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  0000020: error: OnSelectExpr callback failed
+115/115 tests passed.
+;;; STDOUT ;;)

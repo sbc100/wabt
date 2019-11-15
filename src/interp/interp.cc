@@ -1096,8 +1096,7 @@ Result Thread::TableGet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   uint32_t index = Pop<uint32_t>();
   TRAP_IF(index >= table->size(), TableAccessOutOfBounds);
-  Ref ref = static_cast<Ref>(table->entries[index]);
-  return Push(ref);
+  return Push(table->entries[index]);
 }
 
 Result Thread::ElemDrop(const uint8_t** pc) {
@@ -1459,7 +1458,7 @@ ValueTypeRep<R> IntEqz(ValueTypeRep<T> v_rep) {
 }
 
 ValueTypeRep<uint32_t> RefIsNull(ValueTypeRep<Ref> v_rep) {
-  return ToRep(v_rep.index == kInvalidIndex);
+  return ToRep(v_rep.kind == RefType::Null);
 }
 
 template <typename T>
@@ -3564,10 +3563,24 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(Push(Ref{RefType::Null, kInvalidIndex}));
         break;
 
-      case Opcode::TableGrow:
-      case Opcode::TableSize:
-        WABT_UNREACHABLE;
+      case Opcode::TableGrow: {
+        Table* table = ReadTable(&pc);
+        uint32_t increment = Pop<uint32_t>();
+        Ref ref = Pop<Ref>();
+        uint32_t old_size = table->size();
+        uint32_t max = table->limits.has_max ? table->limits.max : UINT32_MAX;
+        PUSH_NEG_1_AND_BREAK_IF(old_size + increment > max);
+        uint32_t new_size = old_size + increment;
+        table->resize(new_size, ref);
+        CHECK_TRAP(Push<uint32_t>(old_size));
         break;
+      }
+
+      case Opcode::TableSize: {
+        Table* table = ReadTable(&pc);
+        CHECK_TRAP(Push<uint32_t>(table->entries.size()));
+        break;
+      }
 
       case Opcode::MemoryInit:
         CHECK_TRAP(MemoryInit(&pc));
@@ -3729,8 +3742,9 @@ void Executor::CopyResults(const FuncSignature* sig, TypedValues* out_results) {
   assert(expected_results == thread_.NumValues());
 
   out_results->clear();
-  for (size_t i = 0; i < expected_results; ++i)
+  for (size_t i = 0; i < expected_results; ++i) {
     out_results->emplace_back(sig->result_types[i], thread_.ValueAt(i));
+  }
 }
 
 }  // namespace interp

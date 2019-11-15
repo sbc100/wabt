@@ -113,10 +113,15 @@ struct Ref {
 
 struct Table {
   explicit Table(Type elem_type, const Limits& limits)
-      : elem_type(elem_type),
-        limits(limits),
-        entries(limits.initial, {RefType::Null, kInvalidIndex}) {}
-  size_t size() const { return entries.size(); }
+      : elem_type(elem_type), limits(limits) {
+    resize(limits.initial, {RefType::Null, kInvalidIndex});
+  }
+
+  Index size() const { return static_cast<Index>(entries.size()); }
+
+  void resize(size_t new_size, Ref init_elem) {
+    entries.resize(new_size, init_elem);
+  }
 
   Type elem_type;
   Limits limits;
@@ -196,6 +201,11 @@ struct TypedValue {
           type = Type::Hostref;
           break;
       }
+    }
+    // Nullable reftypes also have Nullref as a subtype
+    if ((type == Type::Funcref || type == Type::Hostref) &&
+        value.ref.kind == RefType::Null) {
+      type = Type::Nullref;
     }
   }
 

@@ -2073,7 +2073,7 @@ Result WastParser::ParseHostRef(Const* const_) {
   uint64_t ref_bits;
   Result result = ParseInt64(s, end, &ref_bits, ParseIntType::UnsignedOnly);
 
-  const_->type = ref_bits ? Type::Anyref : Type::Nullref;
+  const_->type = Type::Hostref;
   const_->ref_bits = static_cast<uintptr_t>(ref_bits);
 
   if (Failed(result)) {

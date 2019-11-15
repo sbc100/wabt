@@ -1,0 +1,8 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/ref_func.wast
+;;; ARGS*: --enable-reference-types
+(;; STDOUT ;;;
+set-g() =>
+set-f() =>
+10/10 tests passed.
+;;; STDOUT ;;)

@@ -177,6 +177,40 @@ static bool IsNullableRefType(Type t) {
   return t == Type::Anyref || t == Type::Funcref || t == Type::Hostref;
 }
 
+static bool IsSubtype(Type sub, Type super) {
+  if (super == sub) {
+    return true;
+  }
+  if (IsRefType(super) != IsRefType(sub)) {
+    return false;
+  }
+  if (super == Type::Anyref) {
+    return IsRefType(sub);
+  }
+  if (IsNullableRefType(super)) {
+    return sub == Type::Nullref;
+  }
+  return false;
+}
+
+static bool FindCommonSuperType(Type a, Type b, Type* supertype_out) {
+  if (a == b) {
+    *supertype_out = a;
+    return true;
+  }
+  if (IsSubtype(a, b)) {
+    *supertype_out = b;
+  }
+  if (IsSubtype(b, a)) {
+    *supertype_out = a;
+  }
+  if (IsRefType(a) && IsRefType(a)) {
+    *supertype_out = Type::Anyref;
+    return true;
+  }
+  return false;
+}
+
 Result TypeChecker::CheckType(Type actual, Type expected) {
   if (expected == actual || expected == Type::Any || actual == Type::Any) {
     return Result::Ok;
@@ -655,13 +689,13 @@ Result TypeChecker::OnTableSet(Type elem_type) {
   return PopAndCheck2Types(Type::I32, elem_type, "table.set");
 }
 
-Result TypeChecker::OnTableGrow(Index segment) {
-  Result result = PopAndCheck2Types(Type::Anyref, Type::I32, "table.grow");
+Result TypeChecker::OnTableGrow(Type elem_type) {
+  Result result = PopAndCheck2Types(elem_type, Type::I32, "table.grow");
   PushType(Type::I32);
   return result;
 }
 
-Result TypeChecker::OnTableSize(Index segment) {
+Result TypeChecker::OnTableSize() {
   PushType(Type::I32);
   return Result::Ok;
 }
@@ -706,13 +740,24 @@ Result TypeChecker::OnReturn() {
 
 Result TypeChecker::OnSelect() {
   Result result = Result::Ok;
-  Type type = Type::Any;
+  Type type1 = Type::Any;
+  Type type2 = Type::Any;
+  Type result_type = Type::Any;
   result |= PeekAndCheckType(0, Type::I32);
-  result |= PeekType(1, &type);
-  result |= PeekAndCheckType(2, type);
-  PrintStackIfFailed(result, "select", type, type, Type::I32);
+  result |= PeekType(1, &type1);
+  result |= PeekType(2, &type2);
+  // If both types are reftypes then check for common subtype
+  if (IsRefType(type1) && IsRefType(type2)) {
+    if (!FindCommonSuperType(type1, type2, &result_type)) {
+      return Result::Error;
+    }
+  } else {
+    result |= CheckType(type1, type2);
+    result_type = type1;
+  }
+  PrintStackIfFailed(result, "select", type1, type1, Type::I32);
   result |= DropTypes(3);
-  PushType(type);
+  PushType(result_type);
   return result;
 }
 
