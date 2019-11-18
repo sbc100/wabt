@@ -1103,8 +1103,17 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
       DefinedModule* module;
       Errors errors;
       wabt::Result result = ReadModule(module_filename, env, &errors, &module);
-      FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
-                         PrintHeader::Once);
+      if (Failed(result)) {
+        FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
+                           PrintHeader::Once);
+        return result;
+      }
+      ExecResult exec_result = executor_.Initialize(module);
+      if (exec_result.result != interp::Result::Ok) {
+        WriteResult(s_stdout_stream.get(), "error initializing module",
+                    exec_result.result);
+        result = wabt::Result::Error;
+      }
       return result;
     }
   }
@@ -1126,10 +1135,10 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
     return wabt::Result::Error;
   }
 
-  ExecResult exec_result = executor_.RunStartFunction(last_module_);
+  ExecResult exec_result = executor_.Initialize(last_module_);
   if (exec_result.result != interp::Result::Ok) {
     env_.ResetToMarkPoint(mark);
-    WriteResult(s_stdout_stream.get(), "error running start function",
+    WriteResult(s_stdout_stream.get(), "error initializing module",
                 exec_result.result);
     return wabt::Result::Error;
   }
@@ -1229,9 +1238,9 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
   FormatErrorsToFile(errors, Location::Type::Binary);
 
   if (Succeeded(result)) {
-    ExecResult exec_result = executor_.RunStartFunction(module);
+    ExecResult exec_result = executor_.Initialize(module);
     if (exec_result.result == interp::Result::Ok) {
-      PrintError(command->line, "expected error running start function: \"%s\"",
+      PrintError(command->line, "expected instantiation error: \"%s\"",
                  command->filename.c_str());
       result = wabt::Result::Error;
     } else {

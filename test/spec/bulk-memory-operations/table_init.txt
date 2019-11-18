@@ -19,6 +19,8 @@ test() =>
 test() =>
 test() =>
 test() =>
+test() =>
+test() =>
 out/test/spec/bulk-memory-operations/table_init.wast:521: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f32]
   000004a: error: OnTableInitExpr callback failed

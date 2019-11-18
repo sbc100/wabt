@@ -27,6 +27,7 @@
 
 #include "src/binding-hash.h"
 #include "src/common.h"
+#include "src/feature.h"
 #include "src/opcode.h"
 #include "src/stream.h"
 
@@ -144,6 +145,27 @@ struct ElemSegment {
 
   std::vector<Ref> elems;
   bool dropped = false;
+};
+
+struct ElemSegmentInfo {
+  ElemSegmentInfo(Table* table, Index dst) : table(table), dst(dst) {}
+
+  Table* table;
+  Index dst;
+  std::vector<Ref> src;
+};
+
+struct DataSegmentInfo {
+  DataSegmentInfo(Memory* memory,
+                  Address dst,
+                  const void* src,
+                  IstreamOffset size)
+      : memory(memory), dst(dst), src(src), size(size) {}
+
+  Memory* memory;
+  Address dst;
+  const void* src;  // Not owned.
+  IstreamOffset size;
 };
 
 // Opaque handle to a host object.
@@ -346,6 +368,16 @@ struct DefinedModule : Module {
   Index start_func_index; /* kInvalidIndex if not defined */
   IstreamOffset istream_start;
   IstreamOffset istream_end;
+
+  // Changes to linear memory and tables should not apply if a validation error
+  // occurs; these vectors cache the changes that must be applied after we know
+  // that there are no validation errors.
+  //
+  // Note that this behavior changed after the bulk memory proposal; in that
+  // case each segment is initialized as it is encountered. If one fails, then
+  // no further segments are processed.
+  std::vector<ElemSegmentInfo> active_elem_segments_;
+  std::vector<DataSegmentInfo> active_data_segments_;
 };
 
 struct HostModule : Module {
@@ -542,6 +574,8 @@ class Environment {
   // this name and return true.
   std::function<bool(Environment*, string_view name)> on_unknown_module;
 
+  Features features_;
+
  private:
   friend class Thread;
 
@@ -702,13 +736,15 @@ class Executor {
                     const Thread::Options& options = Thread::Options());
 
   ExecResult RunFunction(Index func_index, const TypedValues& args);
-  ExecResult RunStartFunction(DefinedModule* module);
+  ExecResult Initialize(DefinedModule* module);
   ExecResult RunExport(const Export*, const TypedValues& args);
   ExecResult RunExportByName(Module* module,
                              string_view name,
                              const TypedValues& args);
 
  private:
+  ExecResult RunStartFunction(DefinedModule* module);
+  Result InitializeSegments(DefinedModule* module);
   Result RunDefinedFunction(IstreamOffset function_offset);
   Result PushArgs(const FuncSignature*, const TypedValues& args);
   void CopyResults(const FuncSignature*, TypedValues* out_results);

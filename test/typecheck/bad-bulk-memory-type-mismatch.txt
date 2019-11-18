@@ -6,7 +6,7 @@
   (memory 1)
   (data "a")
   (table 1 anyfunc)
-  (elem funcref 0)
+  (elem func 0)
 
   (func
     ;; Mismatch first operand.

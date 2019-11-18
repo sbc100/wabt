@@ -2137,9 +2137,10 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid elem segment flags: %#x",
              flags);
     Index table_index(0);
-    if (flags & SegIndexOther) {
+    if (flags & SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
+    //fprintf(stderr, "elem flags = %#x\n", flags);
     Type elem_type;
     if (flags & SegPassive) {
       CHECK_RESULT(ReadType(&elem_type, "table elem type"));
@@ -2157,12 +2158,22 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
       CALLBACK(EndElemSegmentInitExpr, i);
     }
 
+    if (!(flags & SegUseElemExprs)) {
+      uint8_t kind = 0;
+      CHECK_RESULT(ReadU8(&kind, "export kind"));
+      ERROR_UNLESS(is_valid_external_kind(kind),
+                   "invalid export external kind: %d", kind);
+      //fprintf(stderr, "kind = %#x\n", kind);
+    }
+
     Index num_elem_exprs;
-    CHECK_RESULT(ReadCount(&num_elem_exprs, "elem expr count"));
+    CHECK_RESULT(ReadCount(&num_elem_exprs, "elem count"));
+    //fprintf(stderr, "num exprs = %#x\n", num_elem_exprs);
 
     CALLBACK(OnElemSegmentElemExprCount, i, num_elem_exprs);
     for (Index j = 0; j < num_elem_exprs; ++j) {
-      if (flags & SegPassive) {
+      if (flags & SegUseElemExprs) {
+        //printf("SegUseElemExprs\n");
         Opcode opcode;
         CHECK_RESULT(ReadOpcode(&opcode, "elem expr opcode"));
         if (opcode == Opcode::RefNull) {
@@ -2187,6 +2198,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     CALLBACK(EndElemSegment, i);
   }
   CALLBACK0(EndElemSection);
+  //fprintf(stderr, "done elem sec\n");
   return Result::Ok;
 }
 
@@ -2231,6 +2243,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
 }
 
 Result BinaryReader::ReadDataSection(Offset section_size) {
+  //fprintf(stderr, "start data\n");
   CALLBACK(BeginDataSection, section_size);
   Index num_data_segments;
   CHECK_RESULT(ReadCount(&num_data_segments, "data segment count"));
@@ -2243,10 +2256,11 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   for (Index i = 0; i < num_data_segments; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
+    //fprintf(stderr, "data flags = %#x\n", flags);
     ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid data segment flags: %#x",
              flags);
     Index memory_index(0);
-    if (flags & SegIndexOther) {
+    if (flags & SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));
     }
     CALLBACK(BeginDataSegment, i, memory_index, flags);
@@ -2263,6 +2277,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     CALLBACK(EndDataSegment, i);
   }
   CALLBACK0(EndDataSection);
+  //fprintf(stderr, "done data\n");
   return Result::Ok;
 }
 
@@ -2279,6 +2294,7 @@ Result BinaryReader::ReadDataCountSection(Offset section_size) {
 Result BinaryReader::ReadSections() {
   Result result = Result::Ok;
   Index section_index = 0;
+  bool seen_section_code[static_cast<int>(BinarySection::Last)+1] = {false};
 
   for (; state_.offset < state_.size; ++section_index) {
     uint32_t section_code;
@@ -2293,6 +2309,13 @@ Result BinaryReader::ReadSections() {
     }
 
     BinarySection section = static_cast<BinarySection>(section_code);
+    if (section != BinarySection::Custom) {
+      if (seen_section_code[section_code]) {
+        PrintError("multiple %s sections", GetSectionName(section));
+        return Result::Error;
+      }
+      seen_section_code[section_code] = true;
+    }
 
     ERROR_UNLESS(read_end_ <= state_.size,
                  "invalid section size: extends past end");

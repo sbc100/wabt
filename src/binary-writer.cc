@@ -1035,15 +1035,14 @@ Result BinaryWriter::WriteModule() {
       stream_->WriteU8(segment->flags, "segment flags");
       if (segment->is_passive()) {
         WriteType(stream_, segment->elem_type);
-      } else if (segment->flags & SegIndexOther) {
+      } else if (segment->flags & SegExplicitIndex) {
         WriteU32Leb128(stream_, module_->GetTableIndex(segment->table_var), "table index");
         WriteInitExpr(segment->offset);
       } else {
-        assert(module_->GetTableIndex(segment->table_var) == 0);
         WriteInitExpr(segment->offset);
       }
       WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elems");
-      if (segment->is_passive()) {
+      if (segment->flags & SegUseElemExprs) {
         for (const ElemExpr& elem_expr : segment->elem_exprs) {
           switch (elem_expr.kind) {
             case ElemExprKind::RefNull:
@@ -1060,7 +1059,7 @@ Result BinaryWriter::WriteModule() {
           WriteOpcode(stream_, Opcode::End);
         }
       } else {
-        // Active segment.
+        // Contains a list indexes of a given extern type
         for (const ElemExpr& elem_expr : segment->elem_exprs) {
           assert(elem_expr.kind == ElemExprKind::RefFunc);
           WriteU32Leb128WithReloc(module_->GetFuncIndex(elem_expr.var),
@@ -1103,11 +1102,9 @@ Result BinaryWriter::WriteModule() {
     for (size_t i = 0; i < module_->data_segments.size(); ++i) {
       const DataSegment* segment = module_->data_segments[i];
       WriteHeader("data segment header", i);
-      if (segment->is_passive()) {
-        stream_->WriteU8(SegPassive);
-      } else {
+      stream_->WriteU8(segment->flags, "segment flags");
+      if (!segment->is_passive()) {
         assert(module_->GetMemoryIndex(segment->memory_var) == 0);
-        stream_->WriteU8(SegIndexZero);
         WriteInitExpr(segment->offset);
       }
       WriteU32Leb128(stream_, segment->data.size(), "data segment size");

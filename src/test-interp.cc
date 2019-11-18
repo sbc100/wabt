@@ -59,7 +59,7 @@ class HostTrapTest : public ::testing::Test {
 
     if (result == Result::Ok) {
       interp::Executor executor(&env_);
-      return executor.RunStartFunction(module);
+      return executor.Initialize(module);
     } else {
       return {};
     }

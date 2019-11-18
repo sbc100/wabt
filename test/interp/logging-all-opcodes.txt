@@ -2654,7 +2654,7 @@
 0001b1d: 01                                        ; elem expr function index
 0001b1e: 01                                        ; elem expr function index
 ; elem segment header 1
-0001b1f: 01                                        ; segment flags
+0001b1f: 05                                        ; segment flags
 0001b20: 70                                        ; funcref
 0001b21: 00                                        ; num elems
 0001b16: 0b                                        ; FIXUP section size
@@ -7456,7 +7456,7 @@
 0003948: 00                                        ; section size (guess)
 0003949: 01                                        ; num data segments
 ; data segment header 0
-000394a: 01                                      
+000394a: 01                                        ; segment flags
 000394b: 00                                        ; data segment size
 ; data segment data 0
 0003948: 03                                        ; FIXUP section size
@@ -8310,7 +8310,7 @@ BeginModule(version: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     EndElemSegment(0)
-    BeginElemSegment(index: 1, table_index: 0, flags: 1, elem_type: funcref)
+    BeginElemSegment(index: 1, table_index: 0, flags: 5, elem_type: funcref)
     OnElemSegmentElemExprCount(index: 1, count: 0)
     EndElemSegment(1)
   EndElemSection
