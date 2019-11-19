@@ -2156,14 +2156,12 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
       CALLBACK(BeginElemSegmentInitExpr, i);
       CHECK_RESULT(ReadI32InitExpr(i));
       CALLBACK(EndElemSegmentInitExpr, i);
-    }
-
-    if (!(flags & SegUseElemExprs)) {
+    } else {
       uint8_t kind = 0;
       CHECK_RESULT(ReadU8(&kind, "export kind"));
       ERROR_UNLESS(is_valid_external_kind(kind),
                    "invalid export external kind: %d", kind);
-      //fprintf(stderr, "kind = %#x\n", kind);
+      fprintf(stderr, "kind = %#x\n", kind);
     }
 
     Index num_elem_exprs;

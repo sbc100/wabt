@@ -1032,15 +1032,25 @@ Result BinaryWriter::WriteModule() {
     for (size_t i = 0; i < module_->elem_segments.size(); ++i) {
       ElemSegment* segment = module_->elem_segments[i];
       WriteHeader("elem segment header", i);
+      // 1. flags
       stream_->WriteU8(segment->flags, "segment flags");
-      if (segment->is_passive()) {
-        WriteType(stream_, segment->elem_type);
-      } else if (segment->flags & SegExplicitIndex) {
+      // 2. optional target table
+      if (segment->flags & SegExplicitIndex) {
         WriteU32Leb128(stream_, module_->GetTableIndex(segment->table_var), "table index");
-        WriteInitExpr(segment->offset);
-      } else {
+      }
+      // 3. optional target location within the table (active segments only)
+      if (!segment->is_passive()) {
         WriteInitExpr(segment->offset);
       }
+      // 4. type of item in the following list
+      if (!(segment->flags & SegUseElemExprs)) {
+        //if (segment->is_passive()) {
+        assert(segment->elem_type == Type::Funcref);
+        WriteType(stream_, segment->elem_type);
+        //WriteU32Leb128(stream_, ExternalKind::Func, "num elems");
+        // Contains a list indexes of a given extern type
+      }
+      // 5. actual list of elements preceeded by length
       WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elems");
       if (segment->flags & SegUseElemExprs) {
         for (const ElemExpr& elem_expr : segment->elem_exprs) {
@@ -1059,11 +1069,11 @@ Result BinaryWriter::WriteModule() {
           WriteOpcode(stream_, Opcode::End);
         }
       } else {
-        // Contains a list indexes of a given extern type
+
         for (const ElemExpr& elem_expr : segment->elem_exprs) {
           assert(elem_expr.kind == ElemExprKind::RefFunc);
           WriteU32Leb128WithReloc(module_->GetFuncIndex(elem_expr.var),
-                                  "elem expr function index",
+                                  "elem function index",
                                   RelocType::FuncIndexLEB);
         }
       }
