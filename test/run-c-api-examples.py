@@ -16,7 +16,6 @@
 #
 
 from __future__ import print_function
-import argparse
 
 import os
 import subprocess
@@ -40,8 +39,8 @@ ALL_EXAMPLES = [
 
 # We don't currently yet support shared modules which is required for threads.
 SKIP_EXAMPLES = [
-  'threads', # We don't yet support threads
-  'finalize', # This test is really slow
+    'threads',  # We don't yet support threads
+    'finalize',  # This test is really slow
 ]
 
 
@@ -72,7 +71,6 @@ def check_for_missing(found):
     for e in basenames:
         if e not in ALL_EXAMPLES:
             error('Unexpected example found: %s' % e)
-
 
 
 def main():
@@ -106,6 +104,7 @@ def main():
         print('[%d/%d] c-api examples failed' % (fail_count, count))
         return 1
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
